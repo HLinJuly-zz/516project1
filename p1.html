@@ -1,0 +1,474 @@
+
+<!-- saved from url=(0148)https://blackboard.albany.edu/bbcswebdav/pid-2182189-dt-content-rid-10129412_1/courses/2163-ICSI-416-0220-XLIST_COURSE/p1_icsi416516_S16%282%29.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css"></style></head><body><h2 align="center">ICSI416/516 Spring 2016 -- Project 1<br>
+<strong>Due:  2/24 by 11:59pm via Blackboard</strong></h2><p></p>
+
+<h3>Objectives</h3>
+<ul>
+	There are a number of objectives to this assignment. 
+The first is to make sure you have some experience developing a 
+network-based socket 
+application. Second, because you are 
+allowed to use any 
+references you find on the Internet (including copies of existing 
+code!), this assignment 
+will help you see just how many network programming aids are available.
+Finally, having just a bit of practical experience will put a lot of the
+ protocol concepts 
+we learn into perspective. 
+</ul>
+
+<h3>Assignment Details</h3>
+<ul>
+
+    <p>
+Note: All your code should compile and run on itsunix. Programs that have been developed 
+    on your personal computer and do not run on itsunix will not be graded and will receive 
+    0 points.</p>
+
+The goal of this assignment is to implement a simple client-server 
+system. You can use 
+C, Python or Java. The basic functionality of the system is a remote 
+calculator. You first will be sending expressions through the client to the 
+server.  The server will then calculate the result of the expression and send 
+it back to the client where it is displayed. The server should also 
+send back to the client the string <b>"Socket Programming"</b> as many 
+times as the absolute value of the result from the expression.
+<p>
+
+Your server will start in a "passive mode", in other words, it will 
+listen to a specified port for instructions 
+from the client. Separately, the client will be started and will connect
+ to the server on a 
+given host name or IP address plus a port number. The client should take
+as input from the user the host name or IP address plus the port number 
+and an expression to be calculated. Consider solving an expression that 
+would generate relatively big result, allowing you to test transmission 
+of multiple packets (see TCP and Reliable UDP below for more details). 
+</p><p>
+
+The client, when started, should request the following information:
+</p><ul>
+1. Enter server name or IP address:<br>
+2. Enter port:<br>
+3. Enter expression:<br>
+</ul>
+<br>
+
+and should accept a single line for each query.
+<p>
+
+The client should make sure that the specified port is valid, in other 
+words, the
+client should check if the port is in the range from 0 to 65535 and if 
+not should display a message of the format <b>"Invalid port number.  Terminating."</b>
+</p><p>
+The client, then, will try to connect to the specified server on the 
+specified port and transmit the expression to the server.</p>
+
+<p>
+The interaction flow between the client and server is as follows:<br></p>
+
+<ol>
+	<li> The server starts and waits for a connection to be established by 
+the client.
+
+	</li><li> When an expression is received, the server will:
+	<ul> 
+		<li> Find the result of the expression and store it in a local variable.</li>
+		<li> Write the result and the corresponding number of strings <b>"Socket Programming"</b> to the connection established by the client.</li>
+	</ul>
+	</li><li> Finally, the client will receive the result from the socket and display it to the user.<p></p>
+	</li></ol>
+
+<p>
+
+</p><p>
+Your remote calculator should support the four basic mathematical operations plus various combinations of them:<br></p>
+
+<ol>
+	<li> Addition:</li>
+		<ul>
+			<li> 3 + 2 </li>
+		</ul>
+	<li> Subtraction:
+	<ul> 
+		<li> 3 - 2 </li>
+	</ul>
+	</li>
+	<li> Multiplication:</li>
+	<ul> 
+		<li> 3 * 2 </li>
+	</ul>
+	<li> Division:</li>
+	<ul> 
+		<li> 3 / 2 </li>
+	</ul>
+	<li> Combination:</li>
+	<ul> 
+		<li> ( 3 + 7 ) / 2 </li>
+	</ul><p></p>
+</ol>
+
+<p>
+
+Note that you have to handle network errors. Make sure that you verify in 
+your client code if the connection to the server was successful. If the connection failed,
+
+your client program should display an error of the format:  "<b>Could not connect to server.   Terminating.</b>"</p>
+<p>
+Also make sure your client returns an error if the result was not successfully received from the server.  The client should display the following text:  "<b>Could not fetch result.  Terminating.</b>"
+
+</p><h4><span>TCP and Reliable UDP</span></h4>
+<ul>
+You will implement your client and server using both TCP and
+UDP. This means you will be writing four different programs. (The
+clients and servers using TCP and UDP won't be interoperable so you
+won't be able to use the TCP client with the UDP server and vice
+versa. As food for thought and discussion in the future, why do you
+think these different protocols won't interoperate?)
+Using TCP should be more straightforward since it has
+connections, reliability, in-order delivery, etc. However, UDP by
+itself does not include any of these features so you will have to
+add a simple form of reliability. You will do this by applying the 
+stop-and-wait principle. Since we are working at the application
+level and there is no concept of packets, we will implement our stop
+and wait reliability at the level of character strings.
+<p>
+
+The client and server using Reliable UDP will operate as follows:
+</p><p>
+
+</p><ol>
+	<li> Your client will 
+format the expression to be calculated and send the length of the expression to 
+the server (a "length" message).  Then, in a separate transmission, the client will 
+send the expression string.
+<p>
+
+</p></li><li> When the 
+server receives the length message it will wait up to 500 milliseconds
+for that number of bytes to be sent. If it receives the correct number
+of bytes, it will respond with a string containing the characters "ACK"
+(a common abbreviation for an acknowledgement).
+If it does not receive the correct number of bytes by the end of the
+timeout period, the server will give up, display the following text 
+on the server console, and exit:
+"<b>Did not receive valid expression from client.  Terminating.</b>"
+If you have a large result that is broken up
+into segments, every segment must be ACKed in order to preserve the
+stop-n-wait characteristics of the protocol.
+<p>
+
+</p></li><li> If your client 
+has not received an ACK within 1 second it will resend the length 
+value and then the expression again.
+<p>
+
+</p></li><li> Your client will send, up to 3 times, before giving up, 
+closing 
+the connection and terminating. Upon closing connection, the client 
+should display the following message: "<b>Failed to send expression. 
+Terminating.</b>"
+<p>
+
+</p></li><li> The server will implement reliability in a similar 
+fashion.
+First, it will compute the size of the result it has to send and then
+will send it to the client in a "length" message.  The server will then 
+send messages containing the output one by one and will wait for up to 1 
+second to receive an ACK for each message sent, before sending the next 
+one. Similar to the client, 
+the server will retry sending a single message up to three times before 
+giving up. If the server did not receive an ACK after three attempts, 
+it should display the following text on the server console and
+exit: "<b>Result transmission failed.  Terminating.</b>"
+<p>
+
+</p></li><li>Finally, upon successful reception of the output, the 
+client should display the result.
+<p>
+
+<b>NOTE: </b>When sending large amounts of data over UDP, you might need
+to transmit multiple portions. This is because the
+UDP buffer fills up before the total amount of data is sent. 
+Let's look at an example - say that your server needs to send a total of 
+5120 bytes but the UDP buffer is only 512 bytes. In this case, even though 
+your server said that it is sending 5120 bytes, the UDP on the client delivers 
+the data in 512 byte chunks because of the buffer size. A program that 
+sends an ACK only if the received number of bytes is the same as the expected number 
+of bytes will fail to send an ACK in this case, which eventually will cause 
+the connection to timeout and the server will fail to send result to the client.
+To avoid such problems, your programs will have to send an ACK 
+for each received portion of data, keep track of how 
+much of the entire message had been received and display the result only if the total 
+amount received is equal to the value sent in the length message.
+
+This problem will probably not occur when your client sends data to your server because the entire
+expression will fit into a single packet and thus it will arrive all at
+once. However, you will want to test your system with large enough
+results to confirm that it works correctly. </p>
+
+</li></ol></ul>
+
+<h4><span>Examples </span></h4>
+<ul>
+<p>
+Below are some output examples, to help you format your programs display. The format of both the TCP and 
+UDP programs should be the same - that is why we don't have separate examples for TCP and UDP. The only 
+difference between running TCP and UDP programs is going to be the names of the programs to be run (see 
+section "Language Choice and File Names" for naming conventions). Because we only have access to one development 
+machine (itsunix), you will be running both the server and the client on the same physical machine. For this purpose 
+you need to use the localhost address (or 127.0.0.1) when running your programs. 
+</p>
+<h4><span>Starting the Server</span></h4>
+<ul>
+You are working on itsunix. You should start the server by issuing a command in a 
+terminal, whose 
+syntax should be as follows (see below for correct naming of 
+executables): <p></p>
+
+<ul>
+unix1&gt; server 3300<p></p>
+</ul>
+where "server" is the executable 
+for the TCP or UDP program you wrote and "3300" is the port number you are
+going to use to establish connection.
+<p>
+</p></ul>
+<h4><span>Client Input/Output Example</span></h4>
+<ul>
+
+You are working on itsunix. 
+You should start the client by issuing the following command in a
+terminal (see below for correct naming of executables):<p>
+
+</p><ul>
+unix1&gt; client <p></p>
+</ul>
+
+where client is the executable for the TCP or UDP program you wrote.<p></p>
+
+Here are some other examples of what the client might display depending
+on the user input.
+<p>
+</p><ul>
+unix1&gt; client 
+<br>Enter server name or IP address: gizmo.cs.albany.
+<br> Could not connect to server.  Terminating.
+<br>unix1&gt; 
+<br>
+</ul>
+<br>or
+<ul>
+<br>
+<br>unix1&gt; client 
+<br>Enter server name or IP address: 428.163.7.19
+<br> Could not connect to server.  Terminating.
+<br>unix1&gt; 
+</ul>
+<br>
+<br> or
+<br>
+<ul>
+<br> unix1&gt; client 
+<br>Enter server name or IP address: 128.163.7.19
+<br>Enter port: 99999
+<br>Invalid port number.  Terminating.
+<br>unix1&gt; 
+</ul>
+<br>
+<br> or
+<br>
+<ul>
+<br> unix1&gt; client 
+<br>Enter server name or IP address: 127.0.0.1
+<br>Enter port: 3300
+<br>Enter expression: 2 + 3
+<br>
+<br>Failed to send expression.  Terminating.
+<br> unix1&gt; 
+</ul>
+<br>
+<br> or
+<br>
+<ul>
+<br> unix1&gt; client 
+<br>Enter server name or IP address: 128.163.7.19
+<br>Enter port: 3300
+<br>Enter expression: 2 + 3
+<br>
+<br>Could not fetch result.  Terminating.
+<br> unix1&gt; 
+<br>
+</ul>
+<br> or
+<br>
+<ul>
+<br> unix1&gt; client 
+<br>Enter server name or IP address: localhost
+<br>Enter port: 3300
+<br>Enter expression: 2 + 3
+<br>
+<br>5
+<br>Socket Programming
+<br>Socket Programming
+<br>Socket Programming
+<br>Socket Programming
+<br>Socket Programming
+<br> unix1&gt; 
+</ul>
+<p></p>
+</ul>
+<h4><span>Server Output Examples</span></h4>
+<ul>
+<br>unix1&gt;server 3300
+<br>Did not receive valid expression from client.  Terminating.
+<br>unix1&gt;
+<br>
+<br>or
+<br>
+<br>unix1&gt;server 3300
+<br>Result transmission failed.  Terminating.
+<br>unix1&gt;
+<br>
+<br>or
+<br>
+<br>unix1&gt;server 3300
+<br>unix1&gt;
+<br>(In the case of correct operation, no output is displayed on the server console.)
+</ul>
+</ul>
+
+
+<h4><span>Language Choice and File Names</span></h4>
+<ul>
+
+You will 
+choose C, Python, or Java for this assignment. Regardless of the language
+ choice, 
+you must turn in exactly four programs (all headers, etc. should be 
+included in 
+one file). 
+<br><b>Your programs should be named as indicated below and should compile with NO errors and warning and run on itsunix!</b>
+<p>
+
+For C, the programs should be:
+
+</p><ul type="disc"><ul type="circle"><li class="MsoNormal"><span>Client
+ in C using TCP: client_c_tcp.c </span></li>
+<li class="MsoNormal"><span>Server in C using TCP: server_c_tcp.c </span></li>
+<li class="MsoNormal"><span>Client in C using UDP: client_c_udp.c </span></li>
+<li class="MsoNormal"><span>Server in C using UDP: server_c_udp.c </span></li></ul></ul>
+
+<p>To compile your C code, use the following four commands: </p>
+
+<ul type="disc"><ul type="circle"><li class="MsoNormal"><span>"<i>gcc -g
+ -o client_c_tcp client_c_tcp.c</i>" </span></li>
+<li class="MsoNormal"><span>"<i>gcc -g -o server_c_tcp server_c_tcp.c</i>"
+ </span></li>
+<li class="MsoNormal"><span>"<i>gcc -g -o client_c_udp client_c_tcp.c</i>"
+ </span></li>
+<li class="MsoNormal"><span>"<i>gcc -g -o server_c_udp server_c_tcp.c</i>"
+ </span></li></ul></ul>
+
+<p>For Java, the program names should be:</p>
+
+<ul type="disc"><ul type="circle"><li class="MsoNormal"><span>Client in 
+Java using TCP: client_java_tcp.java </span></li>
+<li class="MsoNormal"><span>Server in Java using TCP: 
+server_java_tcp.java </span></li>
+<li class="MsoNormal"><span>Client in Java using UDP: 
+client_java_udp.java </span></li>
+<li class="MsoNormal"><span>Server in Java using UDP: 
+server_java_udp.java </span></li></ul></ul>
+
+<p>To compile your Java code, use the following commands:</p>
+
+<ul type="disc"><ul type="circle"><li class="MsoNormal"><span>"<i>javac 
+client_java_tcp.java</i>" </span></li>
+<li class="MsoNormal"><span>"<i>javac server_java_tcp.java</i>" </span></li>
+<li class="MsoNormal"><span>"<i>javac client_java_udp.java</i>" </span></li>
+<li class="MsoNormal"><span>"<i>javac server_java_udp.java</i>" </span></li></ul></ul>
+
+<p>For Python, the program names should be:</p>
+
+<ul type="disc"><ul type="circle"><li class="MsoNormal"><span>Client in 
+Python using TCP: client_python_tcp.py </span></li>
+<li class="MsoNormal"><span>Server in Python using TCP: 
+server_python_tcp.py </span></li>
+<li class="MsoNormal"><span>Client in Python using UDP: 
+client_python_udp.py </span></li>
+<li class="MsoNormal"><span>Server in Python using UDP: 
+server_python_udp.py </span></li></ul></ul>
+
+<p>To compile your Python code, use the following commands:</p>
+
+<ul type="disc"><ul type="circle"><li class="MsoNormal"><span>"<i>python
+ client_python_tcp.py</i>" </span></li>
+<li class="MsoNormal"><span>"<i>python server_python_tcp.py</i>" </span></li>
+<li class="MsoNormal"><span>"<i>python client_python_udp.py</i>" </span></li>
+<li class="MsoNormal"><span>"<i>python server_python_udp.py</i>" </span></li></ul></ul>
+
+<p>NOTE:
+Pay attention to all of these directions carefully. Make sure that you name 
+your files and format your messages as specified in the assignment. An 
+automated
+program will be used for grading and if there are any deviations, you 
+will lose
+points! </p>
+</ul>
+</ul>
+
+<h3><span>Grading Guidelines </span></h3>
+<ul>
+You
+may use pieces of code from the Internet to help you do this assignment
+(e.g. basic socket code). However, this is just like citing a passage
+from a book, so if you copy code, you <b>must</b> cite it. To do this,
+put a comment at the beginning of your code that explains exactly what
+you have copied, who originally wrote it, and where it came from. <p></p><p>Below
+is
+ a breakdown of points for this assignment. In addition to
+correctness, part of the points count towards how well code is written
+and documented. NOTE: good code/documentation does not imply that more
+is better. The goal is to be efficient, elegant and succinct! </p>
+
+<ul type="disc"><ul type="circle"><li class="MsoNormal"><span>30 pts: 
+Clients (TCP and Reliable UDP)</span></li>
+<li class="MsoNormal"><span>50 pts: Servers (TCP and Reliable UDP)</span></li>
+<li class="MsoNormal"><span>20 pts: Documentation/Proper References </span></li></ul></ul>
+
+<p>An assignment in C will be awarded up to 10 extra points (because of 
+the greater challenge in the C-code socket syntax). </p>
+</ul>
+
+<h3><span>Final Warning</span></h3>
+<ul>
+	This is
+an assignment you definitely want to start on early. The design of the
+assignment is such that it is nearly impossible to provide all of the
+details you need. Instead of assuming things should be done a
+particular way, <b>ask questions</b>! Use every opportunity to meet
+with the instructor and TAs and send them emails with  questions. Answers that are relevant to
+everyone in class will be posted on the Blackboard discussion forum (which
+will then be emailed to everyone).
+<p>
+</p></ul>
+
+<h3><span>Assignment Turnin</span></h3>
+<ul>
+The assignment should be submitted using the course Blackboard page. 
+Because the
+web site only allows one file to be submitted, you should use zip to combine your four files into a
+single archive and submit this archive for grading.<p></p>
+
+</ul>
+
+<h3><span>Cheating Policy </span></h3>
+	<ul>
+	Cheating is not tolerated. Please, read the university <a href="http://www.albany.edu/studentconduct/assets/University_at_Albany_CommunityRights8-7-15.pdf"> Community Rights and Responsibilities</a> for more information on cheating. Students caught cheating will receive 0 points for the assignment and will be reported. Of particular relevance to this assignment is the need to properly cite material you have used. Failure to do so constitutes plagiarism. <p></p>
+</ul>
+
+</body></html>
